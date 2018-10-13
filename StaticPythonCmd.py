@@ -1,5 +1,6 @@
 import distutils.cmd
 import distutils.log
+import distutils.extension
 import re
 import shutil
 import sys
@@ -55,6 +56,7 @@ class StaticPythonSetup(distutils.cmd.Command):
                 RealNewFile = RealFile
             with open(RealFile, "r") as fd:
                 source = fd.read()
+            os.remove(RealFile)
             for Name in NameReplacements:
                 source = source.replace("cimport " + Name[1] + " as", "cimport " + Name[2] + " as")
                 source = source.replace("cimport " + Name[1] + "\n", "cimport " + Name[2] + " as " + Name[1] + "\n")
@@ -246,12 +248,17 @@ class StaticPythonSetup(distutils.cmd.Command):
                         Defines.append("-D"+Define[0]+"="+str(Define[1]))
                     else:
                         Defines.append("-D"+Define[0])
+                UnDefines = []
+                for Undefine in RealExt.undef_macros:
+                    UnDefines.append("-U"+Undefine)
                 CompleteLibs = " ".join(LibraryDirs) + " " + " ".join(Libs)
                 NameAndSrc = ext[2] + " " + RealSources
 
                 NameAndSrcAndIncludes = NameAndSrc + " " + " ".join(IncludeLines)
-                NameAndSrcAndIncludesAndDefines = NameAndSrcAndIncludes + " ".join(Defines)
+                DefinesAndUndefines = " " + " ".join(Defines) + " " + " ".join(UnDefines)
+                NameAndSrcAndIncludesAndDefines = NameAndSrcAndIncludes + DefinesAndUndefines
                 FinalLine = NameAndSrcAndIncludesAndDefines + " " + CompleteLibs
+                FinalLine = " ".join(FinalLine.split())
 
                 f.write(FinalLine + "\n")
 
